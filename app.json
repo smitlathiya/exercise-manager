@@ -1,0 +1,71 @@
+{
+  "expo": {
+    "name": "Gym Tracker",
+    "slug": "gym-tracker",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "gymtracker",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0B0F14"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.you.gymtracker",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Used to capture progress photos.",
+        "NSPhotoLibraryUsageDescription": "Used to import progress photos.",
+        "NSFaceIDUsageDescription": "Used to unlock the app."
+      }
+    },
+    "android": {
+      "package": "com.you.gymtracker",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0B0F14"
+      },
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.USE_BIOMETRIC",
+        "android.permission.USE_FINGERPRINT",
+        "android.permission.RECORD_AUDIO"
+      ]
+    },
+    "plugins": [
+      "expo-secure-store",
+      "expo-sqlite",
+      "expo-notifications",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "The app accesses your photos to let you upload progress images.",
+          "cameraPermission": "The app accesses your camera to capture progress photos."
+        }
+      ],
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Allow Gym Tracker to use Face ID to unlock the app."
+        }
+      ],
+      "expo-web-browser"
+    ],
+    "extra": {
+      "googleAuth": {
+        "expoClientId": "964837800094-5m1h1g9svd1h2gh605rpt6a1ds9phbqp.apps.googleusercontent.com",
+        "iosClientId": "REPLACE_WITH_IOS_CLIENT_ID",
+        "androidClientId": "964837800094-jl5rj5lehn71g15tlu9evu0r4b0t79vb.apps.googleusercontent.com",
+        "webClientId": "964837800094-qijuk6thk76hkhomtrgpu7853sfkfa6k.apps.googleusercontent.com"
+      },
+      "eas": {
+        "projectId": "ea9af1aa-f447-485f-85d6-2f8ed89bb79e"
+      }
+    }
+  }
+}
