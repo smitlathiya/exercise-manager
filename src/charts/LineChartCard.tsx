@@ -15,17 +15,17 @@ interface Props {
 export const LineChartCard: React.FC<Props> = ({ title, subtitle, data, formatY }) => {
   const t = useTheme();
   const { width } = Dimensions.get('window');
-  const chartWidth = Math.max(220, width - 80);
+  const chartWidth = Math.max(200, width - 110);
   const safeData = data.length ? data : [{ value: 0, label: '' }];
   return (
-    <Card>
+    <Card style={{ overflow: 'hidden' }}>
       <Text variant="h3">{title}</Text>
       {subtitle ? (
         <Text variant="caption" color="muted" style={{ marginBottom: t.spacing.md }}>
           {subtitle}
         </Text>
       ) : null}
-      <View style={{ alignItems: 'center' }}>
+      <View style={{ alignItems: 'center', overflow: 'hidden', marginRight: t.spacing.md }}>
         <LineChart
           data={safeData}
           width={chartWidth}

@@ -43,7 +43,11 @@ export const ExercisesScreen: React.FC = () => {
   return (
     <Screen padded={false}>
       <View style={{ paddingHorizontal: t.spacing.lg, paddingTop: t.spacing.md }}>
-        <ScreenHeader title="Exercises" subtitle={`${exercises.length} available`} />
+        <ScreenHeader 
+          title="Exercises" 
+          subtitle={`${exercises.length} available`} 
+          rightAction={{ label: '+ New', onPress: () => nav.navigate('ExerciseEditor', {}) }}
+        />
         <Input placeholder="Search…" value={query} onChangeText={setQuery} />
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: t.spacing.xs, marginBottom: t.spacing.md }}>
           <Pill label="All" active={muscle === 'All'} onPress={() => setMuscle('All')} />

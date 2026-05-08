@@ -6,8 +6,8 @@ export type RootStackParamList = {
   WorkoutEditor: { workoutId?: string };
   WorkoutLive: { workoutId: string };
   ExerciseDetail: { exerciseId: string };
+  ExerciseEditor: { exerciseId?: string };
   PRHistory: { exerciseId: string };
-  PhotoCompare: undefined;
   AppLock: undefined;
 };
 

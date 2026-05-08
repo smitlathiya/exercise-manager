@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Alert } from 'react-native';
 import * as FileSystem from 'expo-file-system/legacy';
+import * as DocumentPicker from 'expo-document-picker';
 import {
   Screen,
   ScreenHeader,
@@ -15,12 +16,8 @@ import {
 import { useTheme } from '@/hooks/useTheme';
 import { useThemeStore } from '@/store/theme';
 import { useSettingsStore } from '@/store/settings';
-import { useAuthStore } from '@/store/auth';
-import { useSyncStore } from '@/store/sync';
-import { runSync } from '@/sync/manager';
-import { restoreLatestBackup } from '@/sync/restore';
 import { resetDatabase } from '@/database/db';
-import { exportSnapshot } from '@/database/repositories/export';
+import { exportSnapshot, importSnapshot } from '@/database/repositories/export';
 import {
   scheduleWaterReminder,
   scheduleWeightReminder,
@@ -33,7 +30,6 @@ import {
   clearPin,
   authenticateBiometric,
 } from '@/services/appLock';
-import { signOut } from '@/services/auth';
 import { fromNow } from '@/utils/date';
 
 export const SettingsScreen: React.FC = () => {
@@ -41,9 +37,6 @@ export const SettingsScreen: React.FC = () => {
   const themeMode = useThemeStore((s) => s.mode);
   const setThemeMode = useThemeStore((s) => s.setMode);
   const settings = useSettingsStore();
-  const profile = useAuthStore((s) => s.profile);
-  const sync = useSyncStore();
-
   const [bioAvailable, setBioAvailable] = useState(false);
   const [pinModal, setPinModal] = useState(false);
   const [pinInput, setPinInput] = useState('');
@@ -94,23 +87,23 @@ export const SettingsScreen: React.FC = () => {
     }
   };
 
-  const restore = async () => {
-    Alert.alert(
-      'Restore from Drive?',
-      'This will overwrite all local data with your latest Drive backup.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Restore',
-          style: 'destructive',
-          onPress: async () => {
-            const r = await restoreLatestBackup();
-            if (r.ok) Alert.alert('Restore complete');
-            else Alert.alert('Restore failed', r.reason);
-          },
-        },
-      ]
-    );
+  const importFromFile = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: 'application/json',
+        copyToCacheDirectory: true,
+      });
+      if (result.canceled) return;
+      
+      const fileUri = result.assets[0].uri;
+      const content = await FileSystem.readAsStringAsync(fileUri, { encoding: FileSystem.EncodingType.UTF8 });
+      const snap = JSON.parse(content);
+      
+      await importSnapshot(snap);
+      Alert.alert('Imported', 'Data has been restored successfully.');
+    } catch (e) {
+      Alert.alert('Import failed', e instanceof Error ? e.message : String(e));
+    }
   };
 
   const wipe = async () => {
@@ -133,58 +126,15 @@ export const SettingsScreen: React.FC = () => {
 
   return (
     <Screen scroll>
-      <ScreenHeader title="Settings" subtitle={profile?.email ?? ''} />
-
-      {/* Account */}
+      <ScreenHeader title="Settings" />
       <Card style={{ marginBottom: t.spacing.md }}>
-        <Text variant="h3">Account</Text>
-        <Text color="muted" style={{ marginTop: t.spacing.xs }}>
-          {profile?.name ?? 'Signed in with Google'}
+        <Text variant="h3">Data Management</Text>
+        <Text color="muted" style={{ marginTop: t.spacing.xs, marginBottom: t.spacing.md }}>
+          Export your data to a JSON file or import a previous backup.
         </Text>
-        <Text variant="caption" color="dim" style={{ marginTop: t.spacing.xs }}>
-          Drive scope: appdata only
-        </Text>
-        <Button
-          title="Sign out"
-          variant="ghost"
-          onPress={async () => {
-            await signOut();
-          }}
-          style={{ alignSelf: 'flex-start', marginTop: t.spacing.sm, paddingHorizontal: 0 }}
-        />
-      </Card>
-
-      {/* Sync */}
-      <Card style={{ marginBottom: t.spacing.md }}>
-        <Text variant="h3">Backup & Sync</Text>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: t.spacing.sm }}>
-          <Text color="muted">Last sync</Text>
-          <Text>{sync.lastSyncAt ? fromNow(sync.lastSyncAt) : 'Never'}</Text>
-        </View>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: t.spacing.xs }}>
-          <Text color="muted">Pending changes</Text>
-          <Text>{sync.pending}</Text>
-        </View>
-        {sync.lastError ? (
-          <Text variant="caption" color="danger" style={{ marginTop: t.spacing.xs }}>
-            {sync.lastError}
-          </Text>
-        ) : null}
-        <Row
-          label="Auto sync"
-          right={
-            <Switch
-              value={settings.autoSyncEnabled}
-              onValueChange={(v) => settings.update({ autoSyncEnabled: v })}
-            />
-          }
-        />
-        <View style={{ flexDirection: 'row', gap: t.spacing.sm, marginTop: t.spacing.md }}>
-          <Button title="Sync now" loading={sync.isSyncing} onPress={() => runSync({ manual: true })} style={{ flex: 1 }} />
-          <Button title="Restore" variant="secondary" onPress={restore} style={{ flex: 1 }} />
-        </View>
-        <View style={{ flexDirection: 'row', gap: t.spacing.sm, marginTop: t.spacing.sm }}>
-          <Button title="Export JSON" variant="ghost" onPress={exportToFile} style={{ flex: 1 }} />
+        <View style={{ flexDirection: 'row', gap: t.spacing.sm }}>
+          <Button title="Export JSON" onPress={exportToFile} style={{ flex: 1 }} />
+          <Button title="Import JSON" variant="secondary" onPress={importFromFile} style={{ flex: 1 }} />
         </View>
       </Card>
 

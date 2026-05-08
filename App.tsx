@@ -9,13 +9,10 @@ import { AppState, AppStateStatus } from 'react-native';
 import { initDatabase } from '@/database/db';
 import { useThemeStore } from '@/store/theme';
 import { useSettingsStore } from '@/store/settings';
-import { useAuthStore } from '@/store/auth';
-import { useSyncStore } from '@/store/sync';
 import { useAppLockStore } from '@/store/appLock';
 import { useWorkoutSession } from '@/store/workoutSession';
 import { Root } from '@/navigation/Root';
 import { Loading } from '@/components/ui';
-import { startAutoSync, stopAutoSync, refreshSyncStats } from '@/sync/manager';
 import {
   setupAndroidChannel,
   scheduleWaterReminder,
@@ -29,8 +26,6 @@ const App: React.FC = () => {
   const [ready, setReady] = useState(false);
   const themeMode = useThemeStore((s) => s.mode);
   const settings = useSettingsStore();
-  const auth = useAuthStore();
-
   useEffect(() => {
     let alive = true;
     void (async () => {
@@ -39,15 +34,12 @@ const App: React.FC = () => {
           initDatabase(),
           useThemeStore.getState().hydrate(),
           useSettingsStore.getState().hydrate(),
-          useAuthStore.getState().hydrate(),
-          useSyncStore.getState().hydrate(),
           setupAndroidChannel(),
         ]);
         await useWorkoutSession.getState().recoverFromSnapshot();
         if (useSettingsStore.getState().appLockEnabled) {
           useAppLockStore.getState().lock();
         }
-        await refreshSyncStats();
       } finally {
         if (alive) {
           setReady(true);
@@ -59,18 +51,6 @@ const App: React.FC = () => {
       alive = false;
     };
   }, []);
-
-  // Auto-sync lifecycle
-  useEffect(() => {
-    if (!ready) return;
-    const enabled = settings.autoSyncEnabled && Boolean(auth.accessToken || auth.refreshToken);
-    if (enabled) {
-      startAutoSync();
-    } else {
-      stopAutoSync();
-    }
-    return () => stopAutoSync();
-  }, [ready, settings.autoSyncEnabled, auth.accessToken, auth.refreshToken]);
 
   // Reschedule reminders when settings change
   useEffect(() => {

@@ -22,10 +22,9 @@ import { dayjs, formatDate } from '@/utils/date';
 import { formatWeight } from '@/utils/calc';
 import type { BodyMeasurement } from '@/types';
 import { LogBodyModal } from './LogBodyModal';
-import { PhotosTab } from '@/screens/photos/PhotosTab';
 import { NutritionTab } from '@/screens/nutrition/NutritionTab';
 
-type Tab = 'measurements' | 'photos' | 'nutrition';
+type Tab = 'measurements' | 'nutrition';
 
 export const BodyScreen: React.FC = () => {
   const t = useTheme();
@@ -73,7 +72,6 @@ export const BodyScreen: React.FC = () => {
 
       <View style={{ flexDirection: 'row', gap: t.spacing.sm, marginBottom: t.spacing.md }}>
         <Pill label="Measurements" active={tab === 'measurements'} onPress={() => setTab('measurements')} />
-        <Pill label="Photos" active={tab === 'photos'} onPress={() => setTab('photos')} />
         <Pill label="Nutrition" active={tab === 'nutrition'} onPress={() => setTab('nutrition')} />
       </View>
 
@@ -119,7 +117,6 @@ export const BodyScreen: React.FC = () => {
         </>
       ) : null}
 
-      {tab === 'photos' ? <PhotosTab /> : null}
       {tab === 'nutrition' ? <NutritionTab /> : null}
 
       <LogBodyModal

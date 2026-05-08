@@ -53,16 +53,9 @@
         {
           "faceIDPermission": "Allow Gym Tracker to use Face ID to unlock the app."
         }
-      ],
-      "expo-web-browser"
+      ]
     ],
     "extra": {
-      "googleAuth": {
-        "expoClientId": "964837800094-5m1h1g9svd1h2gh605rpt6a1ds9phbqp.apps.googleusercontent.com",
-        "iosClientId": "REPLACE_WITH_IOS_CLIENT_ID",
-        "androidClientId": "964837800094-jl5rj5lehn71g15tlu9evu0r4b0t79vb.apps.googleusercontent.com",
-        "webClientId": "964837800094-qijuk6thk76hkhomtrgpu7853sfkfa6k.apps.googleusercontent.com"
-      },
       "eas": {
         "projectId": "ea9af1aa-f447-485f-85d6-2f8ed89bb79e"
       }

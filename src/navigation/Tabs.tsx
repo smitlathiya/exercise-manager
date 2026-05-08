@@ -1,7 +1,7 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from '@/hooks/useTheme';
-import { Text } from '@/components/ui/Text';
 import type { TabParamList } from './types';
 import { DashboardScreen } from '@/screens/dashboard/DashboardScreen';
 import { WorkoutsScreen } from '@/screens/workouts/WorkoutsScreen';
@@ -11,10 +11,8 @@ import { SettingsScreen } from '@/screens/settings/SettingsScreen';
 
 const Tab = createBottomTabNavigator<TabParamList>();
 
-const tabIcon = (label: string) => () => (
-  <Text variant="caption" weight="700" style={{ fontSize: 11 }}>
-    {label}
-  </Text>
+const tabIcon = (name: React.ComponentProps<typeof MaterialCommunityIcons>['name']) => ({ color }: { color: string }) => (
+  <MaterialCommunityIcons name={name} color={color} size={26} style={{ marginBottom: -4 }} />
 );
 
 export const Tabs: React.FC = () => {
@@ -35,11 +33,11 @@ export const Tabs: React.FC = () => {
         tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
       }}
     >
-      <Tab.Screen name="Dashboard" component={DashboardScreen} options={{ tabBarIcon: tabIcon('●') }} />
-      <Tab.Screen name="Workouts" component={WorkoutsScreen} options={{ tabBarIcon: tabIcon('▶') }} />
-      <Tab.Screen name="Exercises" component={ExercisesScreen} options={{ tabBarIcon: tabIcon('≡') }} />
-      <Tab.Screen name="Body" component={BodyScreen} options={{ tabBarIcon: tabIcon('◇') }} />
-      <Tab.Screen name="Settings" component={SettingsScreen} options={{ tabBarIcon: tabIcon('⚙') }} />
+      <Tab.Screen name="Dashboard" component={DashboardScreen} options={{ tabBarIcon: tabIcon('view-dashboard') }} />
+      <Tab.Screen name="Workouts" component={WorkoutsScreen} options={{ tabBarIcon: tabIcon('dumbbell') }} />
+      <Tab.Screen name="Exercises" component={ExercisesScreen} options={{ tabBarIcon: tabIcon('format-list-bulleted') }} />
+      <Tab.Screen name="Body" component={BodyScreen} options={{ tabBarIcon: tabIcon('human') }} />
+      <Tab.Screen name="Settings" component={SettingsScreen} options={{ tabBarIcon: tabIcon('cog') }} />
     </Tab.Navigator>
   );
 };

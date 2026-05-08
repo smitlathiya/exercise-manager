@@ -105,28 +105,6 @@ export interface PersonalRecord extends BaseRow {
   workout_set_id: string | null;
 }
 
-export type SyncOp = 'upsert' | 'delete';
-export type SyncEntity =
-  | 'workouts'
-  | 'workout_exercises'
-  | 'workout_sets'
-  | 'exercises'
-  | 'body_measurements'
-  | 'nutrition_logs'
-  | 'progress_photos'
-  | 'personal_records'
-  | 'users';
-
-export interface SyncQueueItem {
-  id: number;
-  entity: SyncEntity;
-  entity_id: string;
-  op: SyncOp;
-  payload: string | null;
-  attempts: number;
-  last_error: string | null;
-  created_at: number;
-}
 
 export interface AppSettings {
   unit: Unit;
@@ -134,22 +112,9 @@ export interface AppSettings {
   appLockEnabled: boolean;
   biometricEnabled: boolean;
   pinEnabled: boolean;
-  autoSyncEnabled: boolean;
   workoutReminderHour: number | null;
   waterReminderEvery: number | null;
   weightReminderHour: number | null;
   defaultRestSeconds: number;
 }
 
-export interface GoogleProfile {
-  email: string;
-  name: string;
-  picture?: string;
-  sub: string;
-}
-
-export interface SyncStats {
-  pending: number;
-  failed: number;
-  lastSyncAt: number | null;
-}

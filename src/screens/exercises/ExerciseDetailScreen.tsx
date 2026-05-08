@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { View } from 'react-native';
+import { View, Alert } from 'react-native';
 import {
   RouteProp,
   useFocusEffect,
@@ -16,7 +16,7 @@ import {
   Button,
 } from '@/components/ui';
 import { useTheme } from '@/hooks/useTheme';
-import { getExercise, toggleFavoriteExercise } from '@/database/repositories/exercises';
+import { getExercise, toggleFavoriteExercise, softDeleteExercise } from '@/database/repositories/exercises';
 import { listPRsForExercise, getBestPR } from '@/database/repositories/prs';
 import { useSettingsStore } from '@/store/settings';
 import { formatWeight, formatVolume } from '@/utils/calc';
@@ -60,6 +60,16 @@ export const ExerciseDetailScreen: React.FC = () => {
     }, [load])
   );
 
+  const onDelete = () => {
+    Alert.alert('Delete Exercise', 'Are you sure you want to delete this exercise? Your past workout records will remain intact.', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Delete', style: 'destructive', onPress: async () => {
+        await softDeleteExercise(exercise.id);
+        nav.goBack();
+      }},
+    ]);
+  };
+
   if (!exercise) {
     return (
       <Screen scroll>
@@ -76,11 +86,8 @@ export const ExerciseDetailScreen: React.FC = () => {
         subtitle={`${exercise.muscle_group} · ${exercise.equipment}`}
         onBack={() => nav.goBack()}
         rightAction={{
-          label: exercise.is_favorite ? '★' : '☆',
-          onPress: async () => {
-            await toggleFavoriteExercise(exercise.id);
-            await load();
-          },
+          label: 'Edit',
+          onPress: () => nav.navigate('ExerciseEditor', { exerciseId: exercise.id }),
         }}
       />
 
@@ -123,6 +130,23 @@ export const ExerciseDetailScreen: React.FC = () => {
         variant="secondary"
         onPress={() => nav.navigate('PRHistory', { exerciseId: exercise.id })}
       />
+      <View style={{ flexDirection: 'row', gap: t.spacing.md, marginTop: t.spacing.md }}>
+        <Button
+          title={exercise.is_favorite ? 'Unfavorite' : 'Favorite'}
+          variant="secondary"
+          onPress={async () => {
+            await toggleFavoriteExercise(exercise.id);
+            await load();
+          }}
+          style={{ flex: 1 }}
+        />
+        <Button
+          title="Delete"
+          variant="ghost"
+          onPress={onDelete}
+          style={{ flex: 1 }}
+        />
+      </View>
     </Screen>
   );
 };

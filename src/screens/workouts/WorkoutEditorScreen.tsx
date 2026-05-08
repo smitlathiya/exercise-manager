@@ -95,19 +95,21 @@ export const WorkoutEditorScreen: React.FC = () => {
     Alert.alert('Saved as template');
   };
 
-  const onPick = async (ex: Exercise) => {
+  const onPick = async (exercises: Exercise[]) => {
     if (!workout) return;
-    const we = await addExerciseToWorkout(workout.id, ex.id);
-    await createSet({
-      workout_exercise_id: we.id,
-      set_index: 0,
-      set_type: 'normal',
-      weight: 0,
-      reps: 0,
-      rpe: null,
-      completed: 0,
-      notes: null,
-    });
+    for (const ex of exercises) {
+      const we = await addExerciseToWorkout(workout.id, ex.id);
+      await createSet({
+        workout_exercise_id: we.id,
+        set_index: 0,
+        set_type: 'normal',
+        weight: 0,
+        reps: 0,
+        rpe: null,
+        completed: 0,
+        notes: null,
+      });
+    }
     await load();
   };
 
