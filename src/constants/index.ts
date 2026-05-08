@@ -54,3 +54,17 @@ export const EQUIPMENT = [
 ] as const;
 
 export const DIFFICULTY = ['beginner', 'intermediate', 'advanced'] as const;
+
+export const MUSCLES_BY_GROUP = {
+  Chest: ['Upper Chest', 'Mid Chest', 'Lower Chest'],
+  Back: ['Lats', 'Upper Traps', 'Mid Traps', 'Rhomboids', 'Lower Back', 'Teres Major'],
+  Shoulder: ['Front Delts', 'Side Delts', 'Rear Delts'],
+  Arms: ['Biceps', 'Triceps', 'Forearms', 'Brachialis'],
+  Legs: ['Quads', 'Hamstrings', 'Glutes', 'Calves', 'Adductors', 'Hip Flexors'],
+  Core: ['Abs', 'Obliques', 'Transverse Abdominis'],
+  Cardio: [],
+} as const;
+
+export const ALL_MUSCLES: readonly string[] = Object.values(MUSCLES_BY_GROUP).flat();
+
+export const MUSCLE_SEPARATOR = '|';

@@ -1,6 +1,7 @@
 import React, { useCallback, useState } from 'react';
-import { View, FlatList } from 'react-native';
+import { View, FlatList, Pressable } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import {
   Screen,
   ScreenHeader,
@@ -9,7 +10,6 @@ import {
   Card,
   Text,
   EmptyState,
-  Button,
 } from '@/components/ui';
 import { useTheme } from '@/hooks/useTheme';
 import {
@@ -55,10 +55,17 @@ export const ExercisesScreen: React.FC = () => {
             <Pill key={m} label={m} active={muscle === m} onPress={() => setMuscle(m)} />
           ))}
           <Pill
-            label={favOnly ? '★ Favorites' : '☆ Favorites'}
+            label="Favorites"
             active={favOnly}
             onPress={() => setFavOnly((v) => !v)}
-            tone="primary"
+            tone="warning"
+            iconLeft={
+              <MaterialCommunityIcons
+                name={favOnly ? 'star' : 'star-outline'}
+                size={16}
+                color={favOnly ? t.colors.warning : t.colors.textMuted}
+              />
+            }
           />
         </View>
       </View>
@@ -78,15 +85,26 @@ export const ExercisesScreen: React.FC = () => {
                   {item.muscle_group} · {item.equipment} · {item.difficulty}
                 </Text>
               </View>
-              <Button
-                title={item.is_favorite ? '★' : '☆'}
-                variant="ghost"
-                size="sm"
+              <Pressable
+                hitSlop={10}
+                accessibilityRole="button"
+                accessibilityLabel={item.is_favorite ? 'Unfavorite' : 'Favorite'}
                 onPress={async () => {
                   await toggleFavoriteExercise(item.id);
                   await load();
                 }}
-              />
+                style={({ pressed }) => ({
+                  padding: t.spacing.xs,
+                  marginLeft: t.spacing.sm,
+                  opacity: pressed ? 0.6 : 1,
+                })}
+              >
+                <MaterialCommunityIcons
+                  name={item.is_favorite ? 'star' : 'star-outline'}
+                  size={26}
+                  color={item.is_favorite ? t.colors.warning : t.colors.textDim}
+                />
+              </Pressable>
             </View>
           </Card>
         )}

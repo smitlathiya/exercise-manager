@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { View, Alert } from 'react-native';
+import { View } from 'react-native';
 import {
   RouteProp,
   useFocusEffect,
@@ -14,6 +14,8 @@ import {
   Stat,
   StatRow,
   Button,
+  Pill,
+  ConfirmDialog,
 } from '@/components/ui';
 import { useTheme } from '@/hooks/useTheme';
 import { getExercise, toggleFavoriteExercise, softDeleteExercise } from '@/database/repositories/exercises';
@@ -36,6 +38,7 @@ export const ExerciseDetailScreen: React.FC = () => {
   const [bestReps, setBestReps] = useState<PersonalRecord | null>(null);
   const [best1rm, setBest1rm] = useState<PersonalRecord | null>(null);
   const [bestVolume, setBestVolume] = useState<PersonalRecord | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const load = useCallback(async () => {
     const ex = await getExercise(route.params.exerciseId);
@@ -60,14 +63,10 @@ export const ExerciseDetailScreen: React.FC = () => {
     }, [load])
   );
 
-  const onDelete = () => {
-    Alert.alert('Delete Exercise', 'Are you sure you want to delete this exercise? Your past workout records will remain intact.', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Delete', style: 'destructive', onPress: async () => {
-        await softDeleteExercise(exercise.id);
-        nav.goBack();
-      }},
-    ]);
+  const onConfirmDelete = async () => {
+    if (!exercise) return;
+    await softDeleteExercise(exercise.id);
+    nav.goBack();
   };
 
   if (!exercise) {
@@ -91,10 +90,28 @@ export const ExerciseDetailScreen: React.FC = () => {
         }}
       />
 
+      {exercise.target_muscles.length > 0 ? (
+        <Card style={{ marginBottom: t.spacing.md }}>
+          <Text variant="label" color="muted" style={{ marginBottom: t.spacing.sm }}>
+            Targeted Muscles
+          </Text>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: t.spacing.xs }}>
+            {exercise.target_muscles.map((m, idx) => (
+              <Pill
+                key={m}
+                label={m}
+                active
+                tone={idx === 0 ? 'primary' : 'default'}
+              />
+            ))}
+          </View>
+        </Card>
+      ) : null}
+
       {exercise.instructions ? (
         <Card style={{ marginBottom: t.spacing.md }}>
-          <Text variant="caption" color="muted">
-            INSTRUCTIONS
+          <Text variant="label" color="muted">
+            Instructions
           </Text>
           <Text variant="body" style={{ marginTop: t.spacing.xs }}>
             {exercise.instructions}
@@ -143,10 +160,20 @@ export const ExerciseDetailScreen: React.FC = () => {
         <Button
           title="Delete"
           variant="ghost"
-          onPress={onDelete}
+          onPress={() => setConfirmDelete(true)}
           style={{ flex: 1 }}
         />
       </View>
+
+      <ConfirmDialog
+        visible={confirmDelete}
+        onClose={() => setConfirmDelete(false)}
+        title="Delete exercise?"
+        description="Your past workout records will remain intact."
+        destructive
+        confirmLabel="Delete"
+        onConfirm={onConfirmDelete}
+      />
     </Screen>
   );
 };

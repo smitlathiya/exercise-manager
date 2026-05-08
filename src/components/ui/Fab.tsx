@@ -1,49 +1,67 @@
 import React from 'react';
 import { Pressable, ViewStyle } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+} from 'react-native-reanimated';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from '@/hooks/useTheme';
 import { Text } from './Text';
 
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
 interface Props {
   label?: string;
-  icon?: React.ReactNode;
+  icon?: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
   onPress: () => void;
   style?: ViewStyle;
+  accessibilityLabel?: string;
 }
 
-export const Fab: React.FC<Props> = ({ label, icon, onPress, style }) => {
+export const Fab: React.FC<Props> = ({ label, icon, onPress, style, accessibilityLabel }) => {
   const t = useTheme();
+  const scale = useSharedValue(1);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
   return (
-    <Pressable
+    <AnimatedPressable
       onPress={onPress}
-      style={({ pressed }) => [
+      onPressIn={() => (scale.value = withTiming(0.94, { duration: 90 }))}
+      onPressOut={() => (scale.value = withTiming(1, { duration: 140 }))}
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel ?? label ?? 'Action'}
+      style={[
         {
           position: 'absolute',
           right: t.spacing.lg,
-          bottom: t.spacing.xl,
+          bottom: t.spacing.xxxl,
           backgroundColor: t.colors.primary,
-          paddingHorizontal: label ? t.spacing.lg : 0,
+          paddingHorizontal: label ? t.spacing.xl : 0,
           height: 56,
           minWidth: 56,
           borderRadius: 28,
           flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'center',
-          shadowColor: '#000',
-          shadowOpacity: 0.3,
-          shadowRadius: 8,
-          shadowOffset: { width: 0, height: 4 },
-          elevation: 8,
-          opacity: pressed ? 0.85 : 1,
+          gap: 6,
+          ...t.elevation(4, t.colors.shadow),
         },
+        animatedStyle,
         style,
       ]}
     >
-      {icon ? icon : null}
+      {icon ? (
+        <MaterialCommunityIcons name={icon} size={22} color={t.colors.primaryFg} />
+      ) : null}
       {label ? (
-        <Text variant="bodyBold" style={{ color: '#FFF', marginLeft: icon ? 6 : 0 }}>
+        <Text variant="button" style={{ color: t.colors.primaryFg }}>
           {label}
         </Text>
       ) : null}
-    </Pressable>
+    </AnimatedPressable>
   );
 };

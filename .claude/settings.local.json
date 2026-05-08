@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx tsc *)",
+      "Bash(npx expo *)",
+      "Bash(yarn remove *)",
+      "Bash(npm view *)",
+      "Bash(yarn add *)"
+    ]
+  }
+}

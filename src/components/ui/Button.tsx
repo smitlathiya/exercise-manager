@@ -1,9 +1,16 @@
 import React from 'react';
-import { Pressable, ActivityIndicator, ViewStyle, StyleSheet } from 'react-native';
+import { Pressable, ActivityIndicator, ViewStyle, StyleSheet, View } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+} from 'react-native-reanimated';
 import { useTheme } from '@/hooks/useTheme';
 import { Text } from './Text';
 
-type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'success';
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
+type Variant = 'primary' | 'secondary' | 'tonal' | 'ghost' | 'danger' | 'success';
 type Size = 'sm' | 'md' | 'lg';
 
 interface Props {
@@ -17,6 +24,7 @@ interface Props {
   style?: ViewStyle;
   iconLeft?: React.ReactNode;
   iconRight?: React.ReactNode;
+  accessibilityLabel?: string;
 }
 
 export const Button: React.FC<Props> = ({
@@ -30,54 +38,69 @@ export const Button: React.FC<Props> = ({
   style,
   iconLeft,
   iconRight,
+  accessibilityLabel,
 }) => {
   const t = useTheme();
-  const heights: Record<Size, number> = { sm: 36, md: 46, lg: 54 };
-  const padH: Record<Size, number> = { sm: t.spacing.md, md: t.spacing.lg, lg: t.spacing.xl };
-  const fontSize: Record<Size, number> = { sm: 13, md: 15, lg: 17 };
+  const scale = useSharedValue(1);
 
-  const palette = {
-    primary: { bg: t.colors.primary, fg: '#FFFFFF', border: 'transparent' },
+  const heights: Record<Size, number> = { sm: 36, md: 48, lg: 56 };
+  const padH: Record<Size, number> = { sm: t.spacing.md, md: t.spacing.xl, lg: t.spacing.xxl };
+  const fontSize: Record<Size, number> = { sm: 13, md: 15, lg: 16 };
+
+  const palette: Record<Variant, { bg: string; fg: string; border: string }> = {
+    primary: { bg: t.colors.primary, fg: t.colors.primaryFg, border: 'transparent' },
     secondary: { bg: t.colors.surface, fg: t.colors.text, border: t.colors.border },
+    tonal: { bg: t.colors.primarySoft, fg: t.colors.primary, border: 'transparent' },
     ghost: { bg: 'transparent', fg: t.colors.text, border: 'transparent' },
     danger: { bg: t.colors.danger, fg: '#FFFFFF', border: 'transparent' },
     success: { bg: t.colors.success, fg: '#FFFFFF', border: 'transparent' },
-  }[variant];
+  };
+  const p = palette[variant];
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
 
   return (
-    <Pressable
+    <AnimatedPressable
       onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel ?? title}
+      accessibilityState={{ disabled: disabled || loading }}
       disabled={disabled || loading}
-      style={({ pressed }) => [
+      onPressIn={() => (scale.value = withTiming(0.97, { duration: 80 }))}
+      onPressOut={() => (scale.value = withTiming(1, { duration: 140 }))}
+      style={[
         styles.base,
         {
           height: heights[size],
           paddingHorizontal: padH[size],
-          backgroundColor: palette.bg,
-          borderColor: palette.border,
+          backgroundColor: p.bg,
+          borderColor: p.border,
           borderWidth: variant === 'secondary' ? 1 : 0,
           borderRadius: t.radius.md,
-          opacity: disabled ? 0.45 : pressed ? 0.85 : 1,
+          opacity: disabled ? 0.45 : 1,
           alignSelf: fullWidth ? 'stretch' : 'auto',
         },
+        animatedStyle,
         style,
       ]}
     >
       {loading ? (
-        <ActivityIndicator color={palette.fg} />
+        <ActivityIndicator color={p.fg} />
       ) : (
-        <>
-          {iconLeft}
+        <View style={styles.row}>
+          {iconLeft ? <View style={{ marginRight: 6 }}>{iconLeft}</View> : null}
           <Text
-            variant="bodyBold"
-            style={{ color: palette.fg, fontSize: fontSize[size], marginHorizontal: iconLeft || iconRight ? 6 : 0 }}
+            variant="button"
+            style={{ color: p.fg, fontSize: fontSize[size] }}
           >
             {title}
           </Text>
-          {iconRight}
-        </>
+          {iconRight ? <View style={{ marginLeft: 6 }}>{iconRight}</View> : null}
+        </View>
       )}
-    </Pressable>
+    </AnimatedPressable>
   );
 };
 
@@ -86,5 +109,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
 });

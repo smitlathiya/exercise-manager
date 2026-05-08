@@ -22,6 +22,7 @@ export const SCHEMA_STATEMENTS: string[] = [
     is_favorite INTEGER NOT NULL DEFAULT 0,
     is_custom INTEGER NOT NULL DEFAULT 0,
     notes TEXT,
+    target_muscles TEXT NOT NULL DEFAULT '',
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL,
     deleted_at INTEGER

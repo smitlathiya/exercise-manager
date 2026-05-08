@@ -12,7 +12,7 @@ import { useSettingsStore } from '@/store/settings';
 import { useAppLockStore } from '@/store/appLock';
 import { useWorkoutSession } from '@/store/workoutSession';
 import { Root } from '@/navigation/Root';
-import { Loading } from '@/components/ui';
+import { Loading, ToastHost } from '@/components/ui';
 import {
   setupAndroidChannel,
   scheduleWaterReminder,
@@ -80,6 +80,7 @@ const App: React.FC = () => {
       <SafeAreaProvider>
         <StatusBar style={themeMode === 'light' ? 'dark' : 'light'} />
         {ready ? <Root /> : <Loading message="Preparing your gym log…" />}
+        <ToastHost />
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

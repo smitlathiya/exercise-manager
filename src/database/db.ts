@@ -1,7 +1,7 @@
 import * as SQLite from 'expo-sqlite';
 import { DB_NAME } from '@/constants';
 import { SCHEMA_STATEMENTS } from './schema';
-import { seedExercisesIfEmpty } from './seed';
+import { seedExercisesIfEmpty, backfillTargetMuscles } from './seed';
 
 let _db: SQLite.SQLiteDatabase | null = null;
 
@@ -12,6 +12,17 @@ export const getDb = (): SQLite.SQLiteDatabase => {
   return _db;
 };
 
+const ensureColumn = async (
+  db: SQLite.SQLiteDatabase,
+  table: string,
+  column: string,
+  ddl: string
+): Promise<void> => {
+  const cols = await db.getAllAsync<{ name: string }>(`PRAGMA table_info(${table});`);
+  if (cols.some((c) => c.name === column)) return;
+  await db.execAsync(`ALTER TABLE ${table} ADD COLUMN ${ddl};`);
+};
+
 export const initDatabase = async (): Promise<SQLite.SQLiteDatabase> => {
   if (_db) return _db;
   _db = await SQLite.openDatabaseAsync(DB_NAME);
@@ -20,7 +31,11 @@ export const initDatabase = async (): Promise<SQLite.SQLiteDatabase> => {
     await _db.execAsync(stmt);
   }
 
+  // Migrations for previously-installed databases.
+  await ensureColumn(_db, 'exercises', 'target_muscles', `target_muscles TEXT NOT NULL DEFAULT ''`);
+
   await seedExercisesIfEmpty(_db);
+  await backfillTargetMuscles(_db);
   return _db;
 };
 

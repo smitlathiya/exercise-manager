@@ -29,6 +29,7 @@ export interface Exercise extends BaseRow {
   is_favorite: 0 | 1;
   is_custom: 0 | 1;
   notes: string | null;
+  target_muscles: string[];
 }
 
 export interface Workout extends BaseRow {
