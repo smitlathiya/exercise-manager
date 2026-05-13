@@ -62,19 +62,15 @@ npx expo prebuild   # only if you want bare workflow
 
 1. Create a Google Cloud project: https://console.cloud.google.com
 2. Enable the **Google Drive API**.
-3. Create OAuth client IDs (Android + iOS + Web). For Expo Go testing, use
-   a **Web** client.
-4. Add the four IDs to `app.json` under `extra.googleAuth`:
+3. Create OAuth client IDs (Android + iOS + Web). For Expo Go testing, create
+   a separate Expo/Web client if needed.
+4. Copy `.env.example` to `.env` and add your client IDs:
 
-   ```json
-   "extra": {
-     "googleAuth": {
-       "expoClientId": "...",
-       "iosClientId": "...",
-       "androidClientId": "...",
-       "webClientId": "..."
-     }
-   }
+   ```env
+   EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID=...
+   EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID=...
+   EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=...
+   EXPO_PUBLIC_GOOGLE_EXPO_CLIENT_ID=...
    ```
 
 5. For an Android development/native build, the Google provider redirects to

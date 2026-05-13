@@ -299,6 +299,7 @@ const DriveSection: React.FC = () => {
   const [confirmRestore, setConfirmRestore] = useState<DriveFile | null>(null);
 
   const [request, response, promptAsync] = Google.useAuthRequest({
+    clientId: GOOGLE.expoClientId || GOOGLE.webClientId,
     iosClientId: GOOGLE.iosClientId,
     androidClientId: GOOGLE.androidClientId,
     webClientId: GOOGLE.webClientId,

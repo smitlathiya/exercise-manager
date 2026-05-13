@@ -83,9 +83,10 @@ export const DRIVE = {
 // Enable the Google Drive API, then create OAuth 2.0 client IDs
 // for iOS and Android under APIs & Services → Credentials.
 export const GOOGLE = {
-  iosClientId: '1051090830776-b54sveq8o2f25d209h7390l92tm89v72.apps.googleusercontent.com',
-  androidClientId: '964837800094-jl5rj5lehn71g15tlu9evu0r4b0t79vb.apps.googleusercontent.com',
-  webClientId: '964837800094-5m1h1g9svd1h2gh605rpt6a1ds9phbqp.apps.googleusercontent.com',
+  iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID ?? '',
+  androidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID ?? '',
+  webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ?? '',
+  expoClientId: process.env.EXPO_PUBLIC_GOOGLE_EXPO_CLIENT_ID ?? '',
   scopes: [
     'https://www.googleapis.com/auth/drive.file',
     'email',
