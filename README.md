@@ -77,9 +77,12 @@ npx expo prebuild   # only if you want bare workflow
    }
    ```
 
-5. The app's redirect URI is `gymtracker://`. Add it to your client's
-   authorized redirect URIs (and the matching `https://auth.expo.io/...`
-   if you keep using Expo Go).
+5. For an Android development/native build, the Google provider redirects to
+   `com.you.gymtracker:/oauthredirect`. In your Android OAuth client, enable
+   custom URI schemes and make sure the client uses package name
+   `com.you.gymtracker` plus the SHA-1 fingerprint for the build you installed.
+   If you change the Android package, update the app scheme and redirect URI to
+   match the new package name.
 6. The app only ever requests
    `https://www.googleapis.com/auth/drive.appdata` plus standard openid
    scopes. You cannot accidentally widen this — it's hard-coded in

@@ -10,15 +10,33 @@ export interface DriveFile {
   parents?: string[];
 }
 
+export class DriveAuthError extends Error {
+  constructor(message = 'Google Drive access expired. Please reconnect.') {
+    super(message);
+    this.name = 'DriveAuthError';
+  }
+}
+
 const auth = async (): Promise<string> => {
   const token = await getValidAccessToken();
-  if (!token) throw new Error('Not authenticated');
+  if (!token) throw new DriveAuthError();
   return token;
 };
 
 const json = async <T>(r: Response): Promise<T> => {
   if (!r.ok) {
-    throw new Error(`Drive API ${r.status}: ${await r.text()}`);
+    const body = await r.text();
+    if (r.status === 401) throw new DriveAuthError();
+    if (r.status === 403) {
+      if (body.includes('SCOPE') || body.includes('insufficient') || body.includes('disabled')) {
+        throw new DriveAuthError(
+          body.includes('disabled')
+            ? 'Google Drive API is not enabled in your Cloud project. Enable it and reconnect.'
+            : 'Token is missing Drive permissions. Please reconnect your Google account.'
+        );
+      }
+    }
+    throw new Error(`Drive API ${r.status}: ${body}`);
   }
   return (await r.json()) as T;
 };

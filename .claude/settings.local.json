@@ -5,7 +5,22 @@
       "Bash(Select-Object FullName, PSIsContainer)",
       "Bash(Format-Table -AutoSize)",
       "Bash(npx expo *)",
-      "Bash(npx tsc *)"
+      "Bash(npx tsc *)",
+      "Bash(npx react-native *)",
+      "Bash(./gradlew :react-native-worklets:verifyReleaseResources --info)",
+      "Bash(where java *)",
+      "Bash(reg query *)",
+      "Read(//c/Program Files/Java/**)",
+      "Read(//c/Program Files/**)",
+      "Read(//c/Program Files/Microsoft/**)",
+      "PowerShell(Get-Command *)",
+      "PowerShell(Get-ItemProperty *)",
+      "PowerShell($env:JAVA_HOME = \"C:\\\\Program Files\\\\Java\\\\jdk-17\"; $env:PATH = \"$env:JAVA_HOME\\\\bin;$env:PATH\"; Set-Location \"D:\\\\projects\\\\exercise-manager\\\\android\"; .\\\\gradlew :react-native-worklets:verifyReleaseResources 2>&1 | Select-String -Pattern \"error|Error|FAILED|warning|duplicate|conflict\" | Select-Object -First 40)",
+      "PowerShell($env:JAVA_HOME = \"C:\\\\Program Files\\\\Java\\\\jdk-17\"; $env:PATH = \"$env:JAVA_HOME\\\\bin;$env:PATH\"; Set-Location \"D:\\\\projects\\\\exercise-manager\\\\android\"; .\\\\gradlew :react-native-worklets:verifyReleaseResources --stacktrace 2>&1 | Select-String -Pattern \"error:|Error:|Exception|duplicate|Duplicate|conflict|AAPT\" | Select-Object -First 50)",
+      "PowerShell($env:JAVA_HOME = \"C:\\\\Program Files\\\\Java\\\\jdk-17\"; $env:PATH = \"$env:JAVA_HOME\\\\bin;$env:PATH\"; Set-Location \"D:\\\\projects\\\\exercise-manager\\\\android\"; $result = .\\\\gradlew :react-native-worklets:verifyReleaseResources 2>&1; $result | Select-Object -Last 60)",
+      "PowerShell($env:JAVA_HOME = \"C:\\\\Program Files\\\\Java\\\\jdk-17\"; $env:PATH = \"$env:JAVA_HOME\\\\bin;$env:PATH\"; Set-Location \"D:\\\\projects\\\\exercise-manager\\\\android\"; $result = .\\\\gradlew assembleRelease 2>&1; $result | Select-String -Pattern \"FAILED|error:|Error|duplicate|Duplicate|AAPT|conflict\" | Select-Object -First 50)",
+      "PowerShell($env:JAVA_HOME = \"C:\\\\Program Files\\\\Java\\\\jdk-17\"; $env:PATH = \"$env:JAVA_HOME\\\\bin;$env:PATH\"; Set-Location \"D:\\\\projects\\\\exercise-manager\\\\android\"; .\\\\gradlew assembleRelease 2>&1 | Where-Object { $_ -match \"FAILED|error:|AAPT|duplicate|verifyRelease|BUILD\" } | Select-Object -First 50)",
+      "PowerShell($env:JAVA_HOME = \"C:\\\\Program Files\\\\Java\\\\jdk-17\"; $env:PATH = \"$env:JAVA_HOME\\\\bin;$env:PATH\"; Set-Location \"D:\\\\projects\\\\exercise-manager\\\\android\"; .\\\\gradlew assembleRelease 2>&1 | Select-Object -Last 60)"
     ]
   }
 }

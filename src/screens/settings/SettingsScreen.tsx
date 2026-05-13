@@ -46,6 +46,7 @@ import {
   uploadJSON,
   downloadJSON,
   listAppDataFiles,
+  DriveAuthError,
   type DriveFile,
 } from '@/services/drive';
 import { GOOGLE } from '@/constants';
@@ -337,6 +338,17 @@ const DriveSection: React.FC = () => {
     })();
   }, [response]);
 
+  const handleDriveError = async (e: unknown) => {
+    if (e instanceof DriveAuthError) {
+      await signOutGoogle();
+      setConnected(false);
+      setEmail(null);
+      Alert.alert('Reconnect required', e.message);
+    } else {
+      Alert.alert('Error', e instanceof Error ? e.message : String(e));
+    }
+  };
+
   const onBackup = async () => {
     setBusy(true);
     try {
@@ -346,7 +358,7 @@ const DriveSection: React.FC = () => {
       await uploadJSON(filename, snap, backupsId);
       Alert.alert('Backup complete', 'Your data has been saved to Google Drive.');
     } catch (e) {
-      Alert.alert('Backup failed', e instanceof Error ? e.message : String(e));
+      await handleDriveError(e);
     } finally {
       setBusy(false);
     }
@@ -363,7 +375,7 @@ const DriveSection: React.FC = () => {
       setBackupList(files);
       setShowPicker(true);
     } catch (e) {
-      Alert.alert('Could not load backups', e instanceof Error ? e.message : String(e));
+      await handleDriveError(e);
     } finally {
       setBusy(false);
     }
@@ -376,7 +388,7 @@ const DriveSection: React.FC = () => {
       await importSnapshot(snap);
       Alert.alert('Restored', 'Your data has been restored from Google Drive.');
     } catch (e) {
-      Alert.alert('Restore failed', e instanceof Error ? e.message : String(e));
+      await handleDriveError(e);
     } finally {
       setBusy(false);
     }
