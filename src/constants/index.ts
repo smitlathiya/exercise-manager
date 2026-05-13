@@ -68,3 +68,27 @@ export const MUSCLES_BY_GROUP = {
 export const ALL_MUSCLES: readonly string[] = Object.values(MUSCLES_BY_GROUP).flat();
 
 export const MUSCLE_SEPARATOR = '|';
+
+export const DRIVE = {
+  space: 'drive',
+  rootFolderName: 'GymTracker',
+  backupsFolder: 'Backups',
+  photosFolder: 'Photos',
+  exportsFolder: 'Exports',
+  apiEndpoint: 'https://www.googleapis.com/drive/v3/files',
+  uploadEndpoint: 'https://www.googleapis.com/upload/drive/v3/files',
+} as const;
+
+// Replace these with your credentials from Google Cloud Console.
+// Enable the Google Drive API, then create OAuth 2.0 client IDs
+// for iOS and Android under APIs & Services → Credentials.
+export const GOOGLE = {
+  iosClientId: '1051090830776-b54sveq8o2f25d209h7390l92tm89v72.apps.googleusercontent.com',
+  androidClientId: '964837800094-jl5rj5lehn71g15tlu9evu0r4b0t79vb.apps.googleusercontent.com',
+  webClientId: '964837800094-5m1h1g9svd1h2gh605rpt6a1ds9phbqp.apps.googleusercontent.com',
+  scopes: [
+    'https://www.googleapis.com/auth/drive.file',
+    'email',
+    'profile',
+  ],
+} as const;

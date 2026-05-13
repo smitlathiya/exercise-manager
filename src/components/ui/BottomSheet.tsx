@@ -6,6 +6,7 @@ import Animated, {
   useAnimatedStyle,
   withTiming,
   runOnJS,
+  Easing,
 } from 'react-native-reanimated';
 import { useTheme } from '@/hooks/useTheme';
 import { Text } from './Text';
@@ -18,6 +19,8 @@ interface BottomSheetProps {
   contentStyle?: ViewStyle;
 }
 
+const FALLBACK_HEIGHT = 600;
+
 export const BottomSheet: React.FC<BottomSheetProps> = ({
   visible,
   onClose,
@@ -27,25 +30,32 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
 }) => {
   const t = useTheme();
   const opacity = useSharedValue(0);
-  const translateY = useSharedValue(40);
+  const translateY = useSharedValue(FALLBACK_HEIGHT);
+  const sheetHeight = useSharedValue(FALLBACK_HEIGHT);
   const [mounted, setMounted] = React.useState(visible);
 
   useEffect(() => {
     if (visible) {
       setMounted(true);
-      opacity.value = withTiming(1, { duration: 180 });
-      translateY.value = withTiming(0, { duration: 240 });
-    } else if (mounted) {
-      opacity.value = withTiming(0, { duration: 160 });
-      translateY.value = withTiming(40, { duration: 200 }, (finished) => {
-        if (finished) runOnJS(setMounted)(false);
+      opacity.value = withTiming(1, { duration: 220 });
+      translateY.value = withTiming(0, {
+        duration: 320,
+        easing: Easing.out(Easing.cubic),
       });
+    } else if (mounted) {
+      opacity.value = withTiming(0, { duration: 240 });
+      translateY.value = withTiming(
+        sheetHeight.value,
+        { duration: 280, easing: Easing.in(Easing.cubic) },
+        (finished) => {
+          if (finished) runOnJS(setMounted)(false);
+        }
+      );
     }
-  }, [visible, mounted, opacity, translateY]);
+  }, [visible, mounted, opacity, translateY, sheetHeight]);
 
   const backdropStyle = useAnimatedStyle(() => ({ opacity: opacity.value }));
   const sheetStyle = useAnimatedStyle(() => ({
-    opacity: opacity.value,
     transform: [{ translateY: translateY.value }],
   }));
 
@@ -64,6 +74,9 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
       </Animated.View>
       <View style={styles.host} pointerEvents="box-none">
         <Animated.View
+          onLayout={(e) => {
+            sheetHeight.value = e.nativeEvent.layout.height;
+          }}
           style={[
             {
               backgroundColor: t.colors.bgElevated,

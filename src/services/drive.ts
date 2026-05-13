@@ -2,7 +2,7 @@ import * as FileSystem from 'expo-file-system/legacy';
 import { DRIVE } from '@/constants';
 import { getValidAccessToken } from './auth';
 
-interface DriveFile {
+export interface DriveFile {
   id: string;
   name: string;
   modifiedTime: string;
@@ -28,7 +28,7 @@ export const listAppDataFiles = async (
 ): Promise<DriveFile[]> => {
   const token = await auth();
   const params = new URLSearchParams({
-    spaces: DRIVE.appDataSpace,
+    spaces: DRIVE.space,
     fields: 'files(id, name, modifiedTime, size, parents)',
     pageSize: '1000',
   });
@@ -42,7 +42,7 @@ export const listAppDataFiles = async (
 
 export const findFileByName = async (
   name: string,
-  parentId: string = 'appDataFolder'
+  parentId: string = 'root'
 ): Promise<DriveFile | null> => {
   const safe = name.replace(/'/g, "\\'");
   const files = await listAppDataFiles(
@@ -53,7 +53,7 @@ export const findFileByName = async (
 
 export const createFolder = async (
   name: string,
-  parentId: string = 'appDataFolder'
+  parentId: string = 'root'
 ): Promise<DriveFile> => {
   const token = await auth();
   const r = await fetch(DRIVE.apiEndpoint, {
@@ -73,7 +73,7 @@ export const createFolder = async (
 
 export const ensureFolder = async (
   name: string,
-  parentId: string = 'appDataFolder'
+  parentId: string = 'root'
 ): Promise<string> => {
   const existing = await findFileByName(name, parentId);
   if (existing) return existing.id;

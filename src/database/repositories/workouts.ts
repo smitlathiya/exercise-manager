@@ -87,6 +87,39 @@ export const softDeleteWorkout = async (id: string): Promise<void> => {
   await enqueueSync('workouts', id, 'delete');
 };
 
+export const startWorkoutFromTemplate = async (templateId: string): Promise<Workout | null> => {
+  const src = await getWorkout(templateId);
+  if (!src) return null;
+  const dup = await createWorkout({
+    name: src.name,
+    template_kind: src.template_kind,
+    is_template: false,
+    notes: src.notes,
+  });
+  const exes = await listWorkoutExercises(templateId);
+  for (const we of exes) {
+    const newWe = await addExerciseToWorkout(dup.id, we.exercise_id, {
+      position: we.position,
+      rest_seconds: we.rest_seconds,
+      notes: we.notes,
+    });
+    const sets = await listSetsForWorkoutExercise(we.id);
+    for (const s of sets) {
+      await createSet({
+        workout_exercise_id: newWe.id,
+        set_index: s.set_index,
+        set_type: s.set_type,
+        weight: s.weight,
+        reps: s.reps,
+        rpe: s.rpe,
+        completed: 0,
+        notes: s.notes,
+      });
+    }
+  }
+  return dup;
+};
+
 export const duplicateWorkout = async (sourceId: string): Promise<Workout | null> => {
   const src = await getWorkout(sourceId);
   if (!src) return null;

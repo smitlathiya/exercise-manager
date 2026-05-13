@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { View, Alert } from 'react-native';
+import { View, Alert, ScrollView } from 'react-native';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as DocumentPicker from 'expo-document-picker';
+import * as Google from 'expo-auth-session/providers/google';
+import * as WebBrowser from 'expo-web-browser';
 import {
   Screen,
   ScreenHeader,
@@ -12,12 +14,16 @@ import {
   Button,
   Input,
   Modal,
+  BottomSheet,
+  ListItem,
+  IconButton,
+  ConfirmDialog,
 } from '@/components/ui';
 import { useTheme } from '@/hooks/useTheme';
 import { useThemeStore } from '@/store/theme';
 import { useSettingsStore } from '@/store/settings';
 import { resetDatabase } from '@/database/db';
-import { exportSnapshot, importSnapshot } from '@/database/repositories/export';
+import { exportSnapshot, importSnapshot, type DatabaseSnapshot } from '@/database/repositories/export';
 import {
   scheduleWaterReminder,
   scheduleWeightReminder,
@@ -25,12 +31,27 @@ import {
 } from '@/services/notifications';
 import {
   isBiometricAvailable,
-  isPinSet,
   setPin,
   clearPin,
   authenticateBiometric,
 } from '@/services/appLock';
+import {
+  saveGoogleSession,
+  isGoogleConnected,
+  getGoogleUserEmail,
+  signOutGoogle,
+} from '@/services/auth';
+import {
+  ensureFolderTree,
+  uploadJSON,
+  downloadJSON,
+  listAppDataFiles,
+  type DriveFile,
+} from '@/services/drive';
+import { GOOGLE } from '@/constants';
 import { fromNow } from '@/utils/date';
+
+WebBrowser.maybeCompleteAuthSession();
 
 export const SettingsScreen: React.FC = () => {
   const t = useTheme();
@@ -95,7 +116,7 @@ export const SettingsScreen: React.FC = () => {
       });
       if (result.canceled) return;
       
-      const fileUri = result.assets[0].uri;
+      const fileUri = result.assets[0]!.uri;
       const content = await FileSystem.readAsStringAsync(fileUri, { encoding: FileSystem.EncodingType.UTF8 });
       const snap = JSON.parse(content);
       
@@ -127,10 +148,13 @@ export const SettingsScreen: React.FC = () => {
   return (
     <Screen scroll>
       <ScreenHeader title="Settings" />
+
+      <DriveSection />
+
       <Card style={{ marginBottom: t.spacing.md }}>
-        <Text variant="h3">Data Management</Text>
+        <Text variant="h3">Local Backup</Text>
         <Text color="muted" style={{ marginTop: t.spacing.xs, marginBottom: t.spacing.md }}>
-          Export your data to a JSON file or import a previous backup.
+          Export or import data as a JSON file on this device.
         </Text>
         <View style={{ flexDirection: 'row', gap: t.spacing.sm }}>
           <Button title="Export JSON" onPress={exportToFile} style={{ flex: 1 }} />
@@ -261,6 +285,208 @@ export const SettingsScreen: React.FC = () => {
         <Button title="Save" onPress={onSavePin} fullWidth />
       </Modal>
     </Screen>
+  );
+};
+
+const DriveSection: React.FC = () => {
+  const t = useTheme();
+  const [connected, setConnected] = useState(false);
+  const [email, setEmail] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [backupList, setBackupList] = useState<DriveFile[]>([]);
+  const [showPicker, setShowPicker] = useState(false);
+  const [confirmRestore, setConfirmRestore] = useState<DriveFile | null>(null);
+
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    iosClientId: GOOGLE.iosClientId,
+    androidClientId: GOOGLE.androidClientId,
+    webClientId: GOOGLE.webClientId,
+    scopes: [...GOOGLE.scopes],
+    extraParams: { access_type: 'offline', prompt: 'consent' },
+  });
+
+  useEffect(() => {
+    void (async () => {
+      const ok = await isGoogleConnected();
+      setConnected(ok);
+      if (ok) setEmail(await getGoogleUserEmail());
+    })();
+  }, []);
+
+  useEffect(() => {
+    if (response?.type !== 'success') return;
+    const auth = response.authentication;
+    if (!auth) return;
+    void (async () => {
+      try {
+        const userRes = await fetch('https://www.googleapis.com/userinfo/v2/me', {
+          headers: { Authorization: `Bearer ${auth.accessToken}` },
+        });
+        const info = (await userRes.json()) as { email?: string };
+        await saveGoogleSession({
+          accessToken: auth.accessToken,
+          refreshToken: auth.refreshToken ?? null,
+          expiresIn: auth.expiresIn ?? 3600,
+          email: info.email,
+        });
+        setConnected(true);
+        setEmail(info.email ?? null);
+      } catch {
+        Alert.alert('Sign-in failed', 'Could not complete Google sign-in.');
+      }
+    })();
+  }, [response]);
+
+  const onBackup = async () => {
+    setBusy(true);
+    try {
+      const snap = await exportSnapshot();
+      const { backupsId } = await ensureFolderTree();
+      const filename = `backup_${Date.now()}.json`;
+      await uploadJSON(filename, snap, backupsId);
+      Alert.alert('Backup complete', 'Your data has been saved to Google Drive.');
+    } catch (e) {
+      Alert.alert('Backup failed', e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const onOpenRestore = async () => {
+    setBusy(true);
+    try {
+      const { backupsId } = await ensureFolderTree();
+      const files = await listAppDataFiles(`'${backupsId}' in parents and trashed = false`);
+      files.sort(
+        (a, b) => new Date(b.modifiedTime).getTime() - new Date(a.modifiedTime).getTime()
+      );
+      setBackupList(files);
+      setShowPicker(true);
+    } catch (e) {
+      Alert.alert('Could not load backups', e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const onRestore = async (fileId: string) => {
+    setBusy(true);
+    try {
+      const snap = await downloadJSON<DatabaseSnapshot>(fileId);
+      await importSnapshot(snap);
+      Alert.alert('Restored', 'Your data has been restored from Google Drive.');
+    } catch (e) {
+      Alert.alert('Restore failed', e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const onDisconnect = () => {
+    Alert.alert('Disconnect Google Drive?', 'Backups in Drive are not deleted.', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Disconnect',
+        style: 'destructive',
+        onPress: async () => {
+          await signOutGoogle();
+          setConnected(false);
+          setEmail(null);
+        },
+      },
+    ]);
+  };
+
+  return (
+    <>
+      <Card style={{ marginBottom: t.spacing.md }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: t.spacing.sm, marginBottom: t.spacing.xs }}>
+          <IconButton name="google-drive" size="sm" tone="primary" variant="tonal" />
+          <Text variant="h3">Google Drive</Text>
+        </View>
+
+        {connected ? (
+          <>
+            <Text color="muted" style={{ marginBottom: t.spacing.md }}>
+              {email ?? 'Connected'}
+            </Text>
+            <View style={{ gap: t.spacing.sm }}>
+              <Button
+                title="Backup to Drive"
+                onPress={onBackup}
+                loading={busy}
+                fullWidth
+              />
+              <Button
+                title="Restore from Drive"
+                variant="secondary"
+                onPress={onOpenRestore}
+                loading={busy}
+                fullWidth
+              />
+              <Button
+                title="Disconnect"
+                variant="ghost"
+                onPress={onDisconnect}
+                fullWidth
+              />
+            </View>
+          </>
+        ) : (
+          <>
+            <Text color="muted" style={{ marginTop: t.spacing.xs, marginBottom: t.spacing.md }}>
+              Back up and restore your data via Google Drive.
+            </Text>
+            <Button
+              title="Connect Google Drive"
+              onPress={() => promptAsync()}
+              disabled={!request}
+              fullWidth
+            />
+          </>
+        )}
+      </Card>
+
+      <BottomSheet
+        visible={showPicker}
+        onClose={() => setShowPicker(false)}
+        title="Select Backup"
+      >
+        {backupList.length === 0 ? (
+          <Text color="muted" align="center" style={{ paddingVertical: t.spacing.lg }}>
+            No backups found in Drive
+          </Text>
+        ) : (
+          <ScrollView style={{ maxHeight: 360 }}>
+            {backupList.map((file) => (
+              <ListItem
+                key={file.id}
+                title={new Date(file.modifiedTime).toLocaleString()}
+                subtitle={file.size ? `${(Number(file.size) / 1024).toFixed(1)} KB` : file.name}
+                leading={<IconButton name="cloud-download-outline" size="sm" tone="primary" variant="tonal" />}
+                onPress={() => {
+                  setShowPicker(false);
+                  setConfirmRestore(file);
+                }}
+              />
+            ))}
+          </ScrollView>
+        )}
+      </BottomSheet>
+
+      <ConfirmDialog
+        visible={!!confirmRestore}
+        onClose={() => setConfirmRestore(null)}
+        title="Restore Backup"
+        description={`Restore from ${confirmRestore ? new Date(confirmRestore.modifiedTime).toLocaleString() : ''}? All current local data will be replaced.`}
+        destructive
+        confirmLabel="Restore"
+        onConfirm={async () => {
+          if (confirmRestore) await onRestore(confirmRestore.id);
+          setConfirmRestore(null);
+        }}
+      />
+    </>
   );
 };
 

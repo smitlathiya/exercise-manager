@@ -53,7 +53,8 @@
         {
           "faceIDPermission": "Allow Gym Tracker to use Face ID to unlock the app."
         }
-      ]
+      ],
+      "expo-web-browser"
     ],
     "extra": {
       "eas": {
